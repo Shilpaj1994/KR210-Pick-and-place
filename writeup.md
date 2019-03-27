@@ -44,7 +44,7 @@ You're reading it!
 ### Kinematic Analysis
 #### 1. Run the forward_kinematics demo and evaluate the kr210.urdf.xacro file to perform kinematic analysis of Kuka KR210 robot and derive its DH parameters.
 
-![alt text][image1]
+![](https://github.com/Shilpaj1994/KR210-Pick-and-place/blob/master/misc_images/misc1.png?raw=true)
 
 - Above shown is a Kuka KR210 robot
 
@@ -54,7 +54,7 @@ You're reading it!
 
 - Following is an example of `urdf` file written in `xml` which includes the description of links
 
-  ![](misc_images/urdf.jpg)
+  ![](https://github.com/Shilpaj1994/KR210-Pick-and-place/blob/master/misc_images/urdf.JPG?raw=true)
 
 - A robot consists of various joints and links. All the links are connected in a particular pattern to cover the workspace around the robot.
 
@@ -88,7 +88,7 @@ You're reading it!
 
 - Following is diagram representing link and joints of above shown robot
 
-![](misc_images/DH.PNG)
+![](https://github.com/Shilpaj1994/KR210-Pick-and-place/blob/master/misc_images/DH.png?raw=true)
 
 - Following is a procedure to find out DH parameters
 
@@ -197,7 +197,7 @@ T0_EE = T0_1 * T1_2 * T2_3 * T3_4 * T4_5 * T5_6 * T6_EE
 - We have to find out center of wrist, given the end-effector coordinates
 - Before that we need to account for a rotation discrepancy between DH parameters and Gazebo (URDF)
 
-![](misc_images/corr.png)
+![](https://github.com/Shilpaj1994/KR210-Pick-and-place/blob/master/misc_images/corr.png?raw=true)
 
 - The correction is done by rotating z-axis by 180 degrees and then y-axis by -90 degrees
 
@@ -216,11 +216,11 @@ R_corr = simplify(R_z * R_y)
 
 - Finally, translation on the opposite direction of the gripper link (that lays on the Z axis) to find the wrist center.
 
-![](misc_images/1.png)
+![](https://github.com/Shilpaj1994/KR210-Pick-and-place/blob/master/misc_images/1.png?raw=true)
 
 -  Following equation is used to find wrist center
 
-![](misc_images/2.png)
+![](https://github.com/Shilpaj1994/KR210-Pick-and-place/blob/master/misc_images/2.png?raw=true)
 
 - From DH table, we can find out the wrist offset is 0.303m
 
@@ -237,8 +237,8 @@ WC = EE - (0.303) * ROT_EE[:,2]
 
 - Once the wrist center (WC) is known we can calculate the first joint angle with a simple arctangent:
 
-![](misc_images/3.png)
-  ![](misc_images/4.gif)
+![](https://github.com/Shilpaj1994/KR210-Pick-and-place/blob/master/misc_images/3.png?raw=true)
+  ![](https://github.com/Shilpaj1994/KR210-Pick-and-place/blob/master/misc_images/4.gif?raw=true)
 
 ```python
 theta1 = atan2(WC[1],WC[0])
@@ -246,7 +246,7 @@ theta1 = atan2(WC[1],WC[0])
 
 - For joints 2 and 3, using cosine rule:
 
-![alt text][image2]
+![](https://github.com/Shilpaj1994/KR210-Pick-and-place/blob/master/misc_images/misc3.png?raw=true)
 
 ```python
 side_a = 1.501
@@ -265,10 +265,10 @@ theta3 = pi/2 - (b+0.036) # 0.036 accounts for sag in link4 of -0.054m
 
 ### Inverse Orientation Kinematics
 
-![](misc_images/5.png)
+![](https://github.com/Shilpaj1994/KR210-Pick-and-place/blob/master/misc_images/5.png?raw=true)
 
 - This is used to find the parameters for first 3 joints starting from the base
-- Using above equation, we get the other 3 paramteres
+- Using above equation, we get the other 3 parameters
 
 ```python
 #Extract rotation matrix R0_3 from transformation matrix T0_3 then substitute angles q1-3
