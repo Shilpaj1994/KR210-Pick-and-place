@@ -4,18 +4,6 @@
 
 This is a writeup for the Udacity's Robotics Nanodegree's Pick and Place Project. This directory is a ROS package and instructions for setup are available in `README` file
 
----
-
-**Steps to complete the project:**  
-
-
-1. Set up your ROS Workspace.
-2. Download or clone the [project repository](https://github.com/udacity/RoboND-Kinematics-Project) into the ***src*** directory of your ROS Workspace.  
-3. Experiment with the forward_kinematics environment and get familiar with the robot.
-4. Launch in [demo mode](https://classroom.udacity.com/nanodegrees/nd209/parts/7b2fd2d7-e181-401e-977a-6158c77bf816/modules/8855de3f-2897-46c3-a805-628b5ecf045b/lessons/91d017b1-4493-4522-ad52-04a74a01094c/concepts/ae64bb91-e8c4-44c9-adbe-798e8f688193).
-5. Perform Kinematic Analysis for the robot following the [project rubric](https://review.udacity.com/#!/rubrics/972/view).
-6. Fill in the `IK_server.py` with your Inverse Kinematics code. 
-
 
 [//]: # "Image References"
 
@@ -177,10 +165,55 @@ T5_6 = TF_Matrix(alpha5, a5, d6, q6).subs(DH_Table)
 T6_EE = TF_Matrix(alpha6, a6, d7, q7).subs(DH_Table)
 ```
 
+- Printing output of each transformation matrix individually,
+
+```python
+T0_1 = Matrix([ [1.00000000000000, 0, 0, 0], 
+				[0, 1.00000000000000, 0, 0], 
+				[0, 0, 1.00000000000000, 0.750000000000000], 
+				[0, 0, 0, 1.00000000000000]])
+
+T1_2 = Matrix([ [-0.e-106, 1.00000000000000, 0, 0.350000000000000], 
+				[0, 0, 1.00000000000000, 0], 
+				[1.00000000000000, 0.e-117, 0, 0], 
+				[0, 0, 0, 1.00000000000000]])
+
+T2_3 = Matrix([ [1.0, 0, 0, 1.25000000000000], 
+				[0, 1, 0, 0], 
+				[0, 0, 1.00000000000000, 0], 
+				[0, 0, 0, 1.00000000000000]])
+
+T3_4 = Matrix([ [1.00000000000000, 0, 0, -0.0540000000000000], 
+				[0, 0, 1.00000000000000, 1.50000000000000], 
+				[0, -1.00000000000000, 0, 0], 
+				[0, 0, 0, 1.00000000000000]])
+
+T4_5 = Matrix([ [1.00000000000000, 0, 0, 0], 
+				[0, 0, -1.00000000000000, 0], 
+				[0, 1.00000000000000, 0, 0], 
+				[0, 0, 0, 1.00000000000000]])
+
+T5_6 = Matrix([ [1.00000000000000, 0, 0, 0], 
+				[0, 0, 1.00000000000000, 0], 
+				[0, -1.00000000000000, 0, 0], 
+				[0, 0, 0, 1.00000000000000]])
+
+T6_EE = Matrix([[1.00000000000000, 0, 0, 0], 
+				[0, 1.00000000000000, 0, 0], 
+				[0, 0, 1.00000000000000, 0.303000000000000], 
+				[0, 0, 0, 1.00000000000000]]) 
+```
+
 - Generalized Homogenous Transform between base_link and end-effector is calculated by performing intrinsic transformations by pre-multiplying all individual joints transformation matrices
 
 ```python
 T0_EE = T0_1 * T1_2 * T2_3 * T3_4 * T4_5 * T5_6 * T6_EE
+
+# After printing output
+T0_EE =[[0, 0, 1, 2.15300000000000],
+		[0, -1, 0, 0],
+		[1, 0, 0, 1.94600000000000],
+		[0, 0, 0, 1]]  
 ```
 
 ---
@@ -195,11 +228,38 @@ T0_EE = T0_1 * T1_2 * T2_3 * T3_4 * T4_5 * T5_6 * T6_EE
 ### Inverse Position Kinematics
 
 - We have to find out center of wrist, given the end-effector coordinates
-- Before that we need to account for a rotation discrepancy between DH parameters and Gazebo (URDF)
+- First, we will find out end-effector's positions(**Px, Py, Pz**) and orientations (**Roll, Pitch, Yaw**)
+
+```python
+# Requested end-effector (EE) position
+px = req.poses[x].position.x
+py = req.poses[x].position.y
+pz = req.poses[x].position.z
+
+# store EE position in a matrix
+EE = Matrix([[px],
+			 [py],
+			 [pz]])
+
+# Requested end-effector (EE) orientation
+(roll,pitch,yaw) = tf.transformations.euler_from_quaternion(
+                        [req.poses[x].orientation.x,
+                        req.poses[x].orientation.y,
+                        req.poses[x].orientation.z,
+                        req.poses[x].orientation.w])
+```
+
+- The rotation matrix for the end-effector is calculated by
+
+```python
+R_rpy = Rot(Z, yaw) * Rot(Y, pitch) * Rot(X, roll)
+```
+
+- Now, we need to account for a rotation discrepancy between DH parameters and Gazebo (URDF)
 
 ![](https://github.com/Shilpaj1994/KR210-Pick-and-place/blob/master/misc_images/corr.png?raw=true)
 
-- The correction is done by rotating z-axis by 180 degrees and then y-axis by -90 degrees
+- The orientation difference correction is done by rotating z-axis by 180 degrees and then y-axis by -90 degrees
 
 ```python
 R_z = Matrix([  [cos(np.pi), -sin(np.pi), 0, 0],
@@ -212,63 +272,100 @@ R_y = Matrix([  [ cos(-np.pi/2),  0, sin(-np.pi/2), 0],
 		[-sin(-np.pi/2),  0, cos(-np.pi/2), 0],
 		[             0,  0,             0, 1]])
 R_corr = simplify(R_z * R_y)
+
+ROT_EE = ROT_EE * R_corr
 ```
 
-- Finally, translation on the opposite direction of the gripper link (that lays on the Z axis) to find the wrist center.
+The obtained matrix will be the rotation part of the full homogeneous transform matrix as yellow highlighted in the following:
 
-![](https://github.com/Shilpaj1994/KR210-Pick-and-place/blob/master/misc_images/1.png?raw=true)
+![](misc_images/homog-trans.png)
 
--  Following equation is used to find wrist center
+![](misc_images/R_EE.png)
 
-![](https://github.com/Shilpaj1994/KR210-Pick-and-place/blob/master/misc_images/2.png?raw=true)
+where **l**, **m** and **n** are orthonormal vectors representing the end-effector orientation along X, Y, Z axes of the local coordinate frame.
 
-- From DH table, we can find out the wrist offset is 0.303m
+Since **n** is the vector along the **z-axis** of the **gripper_link**, we can say the following:
+
+![](misc_images/ik.png)
+
+Where,
+
+**Px, Py, Pz** = end-effector positions obtained from test case data
+
+**Xwc, Ywc, Zwc** = wrist center positions that we are trying to find.
+
+**d6** = link_6 length obtained from DH table (d6=0)
+
+**d7** = end-effector length obtained from DH table (d7=0.303)
+
+The same equation in vectorized version (d is the displacement):
+
+![](misc_images/WC.png)
 
 ```python
-EE = Matrix([[px],
-            [py],
-            [pz]])
-
-ROT_EE = ROT_EE.subs({'r': roll, 'p': pitch, 'y': yaw})
-
 # Calculate Wrest Center
 WC = EE - (0.303) * ROT_EE[:,2]
 ```
 
-- Once the wrist center (WC) is known we can calculate the first joint angle with a simple arctangent:
+WC is now having position of wrist center (Wx, Wy, Wz).
 
-![](https://github.com/Shilpaj1994/KR210-Pick-and-place/blob/master/misc_images/3.png?raw=true)
-  ![](https://github.com/Shilpaj1994/KR210-Pick-and-place/blob/master/misc_images/4.gif?raw=true)
+To find 𝜃1, we need to project Wz onto the ground plane Thus,
+
+**Theta1=atan2(Wy,Wx)**
+As shown in the project guide, 
 
 ```python
+# Calculate theat1
 theta1 = atan2(WC[1],WC[0])
 ```
 
-- For joints 2 and 3, using cosine rule:
+Using trigonometry, we can calculate **𝜃2 and 𝜃3**. 
 
-![](https://github.com/Shilpaj1994/KR210-Pick-and-place/blob/master/misc_images/misc3.png?raw=true)
+Now since we have all three sides of the triangle known to us we can calculate all of the three inner angles of the triangle from the known three sides Using trigonometry (specifically the **Cosine Laws** SSS type).
 
 ```python
-side_a = 1.501
-side_b = sqrt(pow((sqrt(WC[0]*WC[0] + WC[1]*WC[1]) - 0.35), 2) + pow((WC[2] - 0.75), 2))
-side_c = 1.25
-
 #Cosine Laws SSS to find all inner angles of the triangle
 a = acos((-0.6875 + side_b*side_b) / (2.5*side_b))
 b = acos(( 3.8125 - side_b*side_b) / (3.75))
 c = acos(( 0.6875 + side_b*side_b) / (3.0*side_b))
+```
 
-#Find theta2 and theta3
+Finally we calculate **𝜃2** and **𝜃3**
+
+```python
 theta2 = pi/2 - a - atan2(WC[2]-0.75, sqrt(WC[0]*WC[0]+WC[1]*WC[1])-0.35)
 theta3 = pi/2 - (b+0.036) # 0.036 accounts for sag in link4 of -0.054m
 ```
+
+
 
 ### Inverse Orientation Kinematics
 
 ![](https://github.com/Shilpaj1994/KR210-Pick-and-place/blob/master/misc_images/5.png?raw=true)
 
 - This is used to find the parameters for first 3 joints starting from the base
-- Using above equation, we get the other 3 parameters
+- We need to find values of the final three joint variables **𝜃4, 𝜃5 and 𝜃6**.
+- Using the individual DH transforms we can obtain the resultant transform and hence resultant rotation by:
+
+```python
+R0_6 = R0_1 * R1_2 * R2_3 * R3_4 * R4_5 * R5_6
+```
+
+- Since the overall RPY (Roll Pitch Yaw) rotation between base_link and gripper_link must be equal to the product of individual rotations between respective links, following holds true:
+
+  **R0_6 = R_EE**
+
+  where,
+
+  **R_EE** = Homogeneous RPY rotation between base_link and gripper_link as calculated above.
+
+- We can substitute the values we calculated for **𝜃1, 𝜃2 and 𝜃3**. in their respective individual rotation matrices and pre-multiply both sides of the above equation by **inv(R0_3)** which leads to:
+
+  **R3_6 = inv(R0_3) * R_EE**
+
+![](misc_images/5.png)
+
+- The resultant matrix on the RHS (Right Hand Side of the equation) does not have any variables after substituting the joint angle values, and hence comparing LHS (Left Hand Side of the equation) with RHS will result in equations for **𝜃4, 𝜃5 and 𝜃6**.
 
 ```python
 #Extract rotation matrix R0_3 from transformation matrix T0_3 then substitute angles q1-3
@@ -298,5 +395,9 @@ else:
 
 - Video shows pick and place task performed by the robot.
 
+![](misc_images/misc2.png)
+
 <iframe width="900" height="506" src="https://www.youtube.com/embed/BCYN8gNxg3E" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+---
 

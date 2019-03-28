@@ -128,7 +128,7 @@ def handle_calculate_IK(req):
                         [py],
                         [pz]])
 
-	    ROT_EE = ROT_EE.subs({'r': roll, 'p': pitch, 'y': yaw})
+	    	ROT_EE = ROT_EE.subs({'r': roll, 'p': pitch, 'y': yaw})
 
             # Calculate Wrest Center
             WC = EE - (0.303) * ROT_EE[:,2]
@@ -138,9 +138,9 @@ def handle_calculate_IK(req):
             theta1 = atan2(WC[1],WC[0])
 
             # find the 3rd side of the triangle
-	    side_a = 1.501
-            side_b = sqrt(pow((sqrt(WC[0]*WC[0] + WC[1]*WC[1]) - 0.35), 2) + pow((WC[2] - 0.75), 2))
-	    side_c = 1.25
+		    side_a = 1.501
+	        side_b = sqrt(pow((sqrt(WC[0]*WC[0] + WC[1]*WC[1]) - 0.35), 2) + pow((WC[2] - 0.75), 2))
+		    side_c = 1.25
 
             #Cosine Laws SSS to find all inner angles of the triangle
             a = acos((-0.6875 + side_b*side_b) / (2.5*side_b))
