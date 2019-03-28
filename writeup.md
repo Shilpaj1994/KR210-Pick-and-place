@@ -72,6 +72,8 @@ You're reading it!
 
 - Following video shows the conventions for D-H parameters and how to calculate D-H parameters for a robot.
 
+### [D-H Parameter Video](https://www.youtube.com/embed/rA9tm0gTln8)
+
 <iframe width="900" height="506" src="https://www.youtube.com/embed/rA9tm0gTln8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 - Following is diagram representing link and joints of above shown robot
@@ -398,6 +400,8 @@ else:
 ![](misc_images/misc2.png)
 
 <iframe width="900" height="506" src="https://www.youtube.com/embed/BCYN8gNxg3E" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+### [Project Video](https://www.youtube.com/embed/BCYN8gNxg3E)
 
 ---
 
